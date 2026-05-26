@@ -1,0 +1,28 @@
+# LangChain core
+langchain
+langchain-core
+langchain-community
+langchain-openai
+langchain-mistralai
+
+# OpenAI
+openai
+mistral
+rich
+streamlit
+# React Agent
+langgraph
+
+# Tavily search tool
+tavily-python
+
+# BeautifulSoup web scraping
+beautifulsoup4
+requests
+lxml
+
+# LCEL / Runnables (included in langchain-core)
+# No separate install needed
+
+# Environment variables
+python-dotenv

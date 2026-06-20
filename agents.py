@@ -1,14 +1,44 @@
 from langchain.agents import create_agent
-from langchain_mistralai import ChatMistralAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from tools import web_search , scrape_url 
+from tools import web_search, scrape_url
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
-#model setup 
-llm = ChatMistralAI(model = "mistral-small-latest",temperature=0.7)
+# Defensive LLM selection
+llm = None
+_mistral_available = False
+try:
+    # try the mistral integration package used in the original code
+    from langchain_mistralai import ChatMistralAI  # type: ignore
+    _mistral_available = True
+except Exception:
+    ChatMistralAI = None
+    _mistral_available = False
+
+if _mistral_available:
+    # Ensure the API key is present; otherwise Mistral will return 401 at runtime
+    if not os.getenv("MISTRAL_API_KEY"):
+        raise RuntimeError(
+            "MISTRAL_API_KEY is not set. Set it in your environment or .env file before running."
+        )
+    llm = ChatMistralAI(model="mistral-small-latest", temperature=0.7)
+else:
+    # Fallback to OpenAI Chat model if available
+    try:
+        from langchain.chat_models import ChatOpenAI  # type: ignore
+        if os.getenv("OPENAI_API_KEY"):
+            llm = ChatOpenAI(temperature=0.7)
+    except Exception:
+        llm = None
+
+if llm is None:
+    raise RuntimeError(
+        "No LLM available. Install and configure Mistral (langchain-mistralai) with MISTRAL_API_KEY,\n"
+        "or set OPENAI_API_KEY and install langchain-openai. See requirements.txt and .env for examples."
+    )
 
 
 #1st agent 

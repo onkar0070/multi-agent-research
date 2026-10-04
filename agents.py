@@ -1,44 +1,41 @@
+from pathlib import Path
+
 from langchain.agents import create_agent
+from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from tools import web_search, scrape_url
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
+_ENV_PATH = Path(__file__).resolve().parent / ".env"
+load_dotenv(_ENV_PATH)
 
-# Defensive LLM selection
-llm = None
-_mistral_available = False
-try:
-    # try the mistral integration package used in the original code
-    from langchain_mistralai import ChatMistralAI  # type: ignore
-    _mistral_available = True
-except Exception:
-    ChatMistralAI = None
-    _mistral_available = False
 
-if _mistral_available:
-    # Ensure the API key is present; otherwise Mistral will return 401 at runtime
-    if not os.getenv("MISTRAL_API_KEY"):
-        raise RuntimeError(
-            "MISTRAL_API_KEY is not set. Set it in your environment or .env file before running."
+def _groq_api_key() -> str:
+    key = (os.getenv("GROQ_API_KEY") or "").strip()
+    if not key:
+        raise ValueError(
+            "GROQ_API_KEY is missing. Add it to .env "
+            "(create a key at https://console.groq.com/keys — it starts with gsk_)."
         )
-    llm = ChatMistralAI(model="mistral-small-latest", temperature=0.7)
-else:
-    # Fallback to OpenAI Chat model if available
-    try:
-        from langchain.chat_models import ChatOpenAI  # type: ignore
-        if os.getenv("OPENAI_API_KEY"):
-            llm = ChatOpenAI(temperature=0.7)
-    except Exception:
-        llm = None
+    if key.startswith("mstrl_"):
+        raise ValueError(
+            "GROQ_API_KEY looks like a Mistral key (mstrl_). "
+            "Create a Groq key at https://console.groq.com/keys and set GROQ_API_KEY=gsk_..."
+        )
+    return key
 
-if llm is None:
-    raise RuntimeError(
-        "No LLM available. Install and configure Mistral (langchain-mistralai) with MISTRAL_API_KEY,\n"
-        "or set OPENAI_API_KEY and install langchain-openai. See requirements.txt and .env for examples."
-    )
+
+# Groq retired llama-3.3-70b-versatile (Aug 2026); override via GROQ_MODEL in .env
+_DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b"
+
+# model setup
+llm = ChatGroq(
+    model=os.getenv("GROQ_MODEL", _DEFAULT_GROQ_MODEL).strip() or _DEFAULT_GROQ_MODEL,
+    temperature=0.7,
+    groq_api_key=_groq_api_key(),
+)
 
 
 #1st agent 

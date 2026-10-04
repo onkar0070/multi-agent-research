@@ -1,6 +1,5 @@
 import streamlit as st
 import time
-from agents import build_reader_agent, build_search_agent, writer_chain, critic_chain
 
 # ── Page config ──────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -9,6 +8,16 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+try:
+    from agents import build_reader_agent, build_search_agent, writer_chain, critic_chain
+except ValueError as e:
+    st.error(str(e))
+    st.markdown(
+        "Get a free API key at [console.groq.com/keys](https://console.groq.com/keys), "
+        "then set `GROQ_API_KEY=gsk_...` in your project `.env` and restart Streamlit."
+    )
+    st.stop()
 
 # ── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""

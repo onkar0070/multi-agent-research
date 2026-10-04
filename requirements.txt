@@ -3,11 +3,10 @@ langchain
 langchain-core
 langchain-community
 langchain-openai
-langchain-mistralai
+langchain-groq
 
 # OpenAI
 openai
-mistral
 rich
 streamlit
 # React Agent
